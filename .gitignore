@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# Local configuration and runtime state
+.env
+.env.*
+!.env.example
+/local/
+/runtime/
+/state/
+/backups/
+/logs/
+*.log
+*.backup
+*.bak
+
+# Credentials and SSH state
+.ssh/
+*private_key*
+*.pem
+*.key
+*.ppk
+tiiny_owner_ed25519*
+known_hosts*
+*token*.json
+*token*.txt
+
+# Chromium/LevelDB data must not be published
+*.ldb
+*.sst
+*.sqlite
+*.sqlite3
+*.db
+MANIFEST-*
+CURRENT
+LOCK
+LOG
+LOG.old
