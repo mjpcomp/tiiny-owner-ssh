@@ -69,6 +69,7 @@ Management uses HTTP without TLS and temporary containers; install/restore requi
 | --- | --- |
 | Underlying backup/check/install/real restore/fresh login and rejection/cleanup | Passed on one setup |
 | Windows shortcut with system Python, IP prompt, default state reuse, dry-run and live check | Passed 2026-10-20 |
+| Houmo SMI identity, firmware, usable DDR and extended chip/core inventory | Successful queries 2026-10-20; not a memory or performance test |
 | Mocked/synthetic Linux tests | 32 passed: 16 launcher, 16 host-state |
 | Windows .venv branch, action menu, launcher-driven install/restore on hardware | Not yet validated |
 | Real interruption recovery, reboot persistence, firmware updates, other versions | Not established |
@@ -77,9 +78,9 @@ Management uses HTTP without TLS and temporary containers; install/restore requi
 
 ## Hardware we found
 
-AiBox SIT Board V0.1.2 / CIX Sky1-family; 8 Cortex-A720 + 4 Cortex-A520; approximately 32 GB host RAM; Houmo/XH2A driver v1.4.1 over PCIe 4.0 x4; Samsung 1 TB-class NVMe; RAUC A/B, read-only root and configuration overlays.
+AiBox SIT Board V0.1.2 / CIX Sky1-family; 8 Cortex-A720 + 4 Cortex-A520; approximately 32 GB host RAM; Houmo LQ50-48GB accelerator with three reported 16 GB DDR chips, driver/firmware V1.4.1 and PCIe 4.0 x4; Samsung 1 TB-class NVMe; RAUC A/B, read-only root and configuration overlays.
 
-These are observations on our inspected setup, not universal specifications. Accelerator-local memory capacity is still unmeasured. [Hardware findings, software architecture and open questions](docs/HARDWARE.md).
+SMI reported 49024.0 MB usable accelerator DDR, all free at the query instant, and both accelerator cores available (0x11). Host RAM and accelerator DDR are separate pools, not unified CPU RAM. These are software-reported observations on our inspected setup, not universal specifications, a teardown, a full memory-integrity test or a throughput measurement. [Hardware findings, working SMI invocation and open questions](docs/HARDWARE.md).
 
 ## Repository guide
 

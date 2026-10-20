@@ -12,6 +12,14 @@ The owner ran tiiny.cmd check --dry-run and tiiny.cmd check from a newly downloa
 
 This does NOT validate the Windows .venv-selection branch, no-argument action menu, explicit-IP path or install/restore through the launcher on hardware. The underlying install/restore engines were tested directly.
 
+## Accelerator inventory, completed 2026-10-20
+
+The owner successfully ran the installed Houmo SMI with a package-root HOUMO_SDK_PATH, hal/lib on process-local LD_LIBRARY_PATH, and a temporary XDG_DATA_HOME under /dev/shm. Initial failures were traced to an obsolete logger path and then a library-search root mismatch; no library installation or system-linker change was used.
+
+Reported model LQ50-48GB, PN 101C3011, driver/firmware/HMSW V1.4.1, HM_SMI V1.0.0, and 49024.0 MB usable/free DDR at the first snapshot. Extended inventory reported three 16 GB DDR chips, Chip_Revision 1, and Avail_Core_Id 0x11 (both cores available according to installed help). Extended output confirmed the intended log path under /dev/shm.
+
+This validates the information-query path and records software-reported inventory, not a teardown, full memory test, inference benchmark, measured bandwidth, thermal/power characterization or zero-write guarantee. Exact MB unit convention and reservation size remain unverified. Core availability is not utilization. See HARDWARE.md for the reproducible invocation and privacy precautions.
+
 ## Build-environment checks
 
 All seven original engine modules were compared to owner-supplied working files by Git blob hash and matched byte-for-byte; they compiled and local import targets were present. cramjam was absent in that build environment, so this was not a full real-dependency runtime import test. The owner had tested it on Windows.
@@ -20,4 +28,4 @@ All seven original engine modules were compared to owner-supplied working files 
 
 ## Not established
 
-Reboot persistence, firmware-update compatibility, recovery through real interruption/failure, every Match context, other client/device versions, factory equivalence, complete metadata restoration, warranty neutrality and accelerator-local memory capacity. See HARDWARE.md for observed facts versus advertised specifications.
+Reboot persistence, firmware-update compatibility, recovery through real interruption/failure, every Match context, other client/device versions, factory equivalence, complete metadata restoration, warranty neutrality, full accelerator memory integrity and performance/power/thermal behavior. See HARDWARE.md for observed facts versus advertised specifications.
