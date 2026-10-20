@@ -1,0 +1,2 @@
+# Core tested dependency; inventory-only PyYAML is not required here.
+cramjam==2.14.0
