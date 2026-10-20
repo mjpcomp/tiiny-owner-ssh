@@ -1,17 +1,15 @@
 # Current project state
 
-Updated: 2026-10-19. This file and README.md supersede historical checkpoint-stage descriptions.
+Updated 2026-10-20. README.md, docs/USAGE.md and docs/VALIDATION.md are current guidance. Other checkpoint files retain historical stage descriptions.
 
-The seven engine modules are committed and match the owner's uploaded working snapshots by Git blob hash. They compiled and all local import targets were present. The build environment lacked cramjam, so a full real-dependency import test was not performed there; the owner tested it and the workflow on Windows AMD64.
+The seven original engine modules are committed, matched the owner's working uploads by Git blob hash, compiled and had all local import targets present. cramjam was unavailable in the Linux build environment; the owner tested that dependency and the workflow on Windows AMD64.
 
-Owner-run hardware tests passed: token/API access; temporary connector/service/report lifecycle; immutable backup/read-back; key rejection before install; offline service/listener preflight; actual install with fresh root login; actual restore with fresh key rejection; final baseline-state check and cleanup.
+The owner completed original-state backup, check, actual install with fresh root SSH login, actual restore with fresh owner-key rejection, and final baseline-state check; temporary-resource cleanup passed. On 2026-10-20, the new Windows shortcut's system-Python fallback, omitted-IP prompt, default state-directory reuse, dry-run and live check also passed. Launcher-driven install/restore, the Windows .venv branch and menu remain unvalidated on hardware. See docs/VALIDATION.md for precise scope.
 
-The new tiiny.py/tiiny.cmd front end prompts for missing action/IP, defaults to the existing private state directory, validates inputs and delegates to unchanged engines without bypassing confirmations. It does not remove tiiny_owner.py: that remains a required internal dependency pending a separate refactor.
+32 mocked/synthetic Linux tests passed. They do not establish real failure/interruption recovery, reboot persistence, firmware-update compatibility or universal device support.
 
-32 tests passed in the Linux build environment: 16 launcher tests with mocked child processes and 16 POSIX host-state regressions with mocked system checks/signals. This is not Windows batch or new hardware end-to-end validation. Validate the new launcher with --dry-run before device use; Windows shortcut execution remains untested here.
+The owner confirms that the tested SearXNG helper image came from installing Odysseus through TiinyOS. The tool uses a new helper container from the cached image and a separate existing connector-report volume; it does not provision Odysseus or silently pull another image. Future package versions may not supply the pinned image.
 
-The paired backup/access engines remain directly callable. Unsupported legacy tiiny_owner.py CLI discovery is not a supported entry point. Existing baseline files must not be regenerated or edited.
+Normal entry point: tiiny.cmd / tiiny.py. Advanced engines remain directly callable. tiiny_owner.py is still an internal dependency; removing its legacy CLI/shared-code coupling requires a separate tested refactor. No runtime changes are included in this documentation update.
 
-The README includes setup, key, backup/check/install/restore, PuTTY and recovery limits. docs/HARDWARE.md separates observations from advertised capacities and unresolved questions.
-
-Real failure/interruption recovery, reboot persistence, firmware updates, other client/device versions, complete metadata restoration and warranty neutrality remain unverified. Current per-device access state is intentionally not tracked publicly. All baseline/runtime data, tokens, private keys and raw evidence stay out of the repository.
+Baseline and runtime state, tokens, private keys, raw output and vendor-source evidence stay private. Preserve the original baseline rather than regenerate it. Current per-device access state is not tracked publicly. Hardware observations and unverified capacities are documented separately in docs/HARDWARE.md.

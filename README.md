@@ -1,125 +1,91 @@
 # Tiiny Owner SSH
 
-Unofficial experimental Windows tooling for owner-managed root SSH, with an original-state backup and a paired restore procedure. Use only on authorized devices and a trusted network. Not affiliated with Tiiny.
+Enable owner-managed, key-based root SSH on a Tiiny device from Windows, with an original-state backup and a matching restore command.
 
-## What works and what changed
+For authorized administration, troubleshooting and system inspection. Uses the existing SSH server on port 3588; does not flash firmware or install a replacement SSH server. Unofficial and experimental, not affiliated with Tiiny.
 
-The seven engine modules are the owner's hardware-tested snapshots: backup, check, real root SSH installation, real restoration, fresh owner-key rejection, and a final baseline-state check succeeded on one setup. Cleanup checks passed.
+## Start here
 
-The new tiiny.py launcher adds an action menu, optional IP prompting, default state directory, argument validation and dry-run. It delegates to those engines in a separate process using the same Python interpreter. It does not change their device logic or bypass typed confirmations. The Windows tiiny.cmd shortcut prefers a local .venv, otherwise python on PATH.
+### 1. Prepare the device and Windows
 
-The launcher has 16 mocked unit tests; the host-state engine has 16 synthetic POSIX regression tests. All 32 passed in the Linux build environment. The new launcher/batch shortcut have not yet been device-tested on Windows. Validate --dry-run first. The seven original modules were compared with the owner's attachments by Git blob hash and matched byte-for-byte.
+- Tested client: Windows 11 AMD64, Python 3.13.15, Windows OpenSSH client/ssh-keygen. WSL is not required.
+- Pair the TiinyOS Windows app with the target once, note its IPv4 address, then exit the app completely, including the tray instance, before token reading.
+- On the tested setup, installing Odysseus through the TiinyOS application supplied the cached SearXNG helper image. No separate SearXNG installation was needed. The tool creates a NEW temporary helper container, not a command inside your existing app container.
+- This version requires registry.tiiny.cloud/wa-odysseus-searxng:v0.1 and the separate existing platform volume aibox_connectors_config. It does not provision an app or pull another image. Future Odysseus versions may differ; this is not a universal compatibility promise.
 
-## Setup
+If Odysseus is already installed, do not reinstall it just for this procedure. Installing an app changes application/container state and is not undone by the SSH restore.
 
-Prerequisites: Python 3.13 and Windows OpenSSH client/ssh-keygen. The tested client was Windows 11 AMD64 with Python 3.13.15. WSL is not required; Windows ARM64 is unvalidated.
-
-Clone/download the repository, open PowerShell in its root, then:
+Download this repository using GitHub Code > Download ZIP and extract it, or clone with Git. Open PowerShell in the folder containing tiiny.cmd and requirements.txt:
 
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install --only-binary=:all: -r requirements.txt
 ```
 
-Pair the TiinyOS Windows app with the device, then exit the app completely before token reading. The tested app was 1.0.1; device platform container names included 0.1.35, which is not a verified firmware version.
+### 2. Choose your path
 
-The cached registry.tiiny.cloud/wa-odysseus-searxng:v0.1 image and existing aibox_connectors_config volume must already be available. The tool requests pull_policy: never; it does not install an app or fetch a replacement image. This prerequisite is not guaranteed on every Tiiny.
+| Situation | What to do |
+| --- | --- |
+| First use, no key/baseline | [First-time setup](docs/USAGE.md#first-time-setup): key, original-state backup, check, then install |
+| Existing owner key and baseline | Preserve them. Use check/install/restore; do not create another baseline |
+| Remove the access added by this tool | [Restore](docs/USAGE.md#restore), using the SAME original baseline |
+| Only interested in the device internals | Read [hardware findings](docs/HARDWARE.md); no installation needed to read the notes |
 
-## Easier commands
+Start with a local preview:
+
+```powershell
+.\tiiny.cmd check --dry-run
+```
+
+It prompts for the IP and shows the invocation without contacting the device or creating state files. Dry-run does not validate actual device/dependency readiness.
+
+### 3. Use the launcher
 
 ```powershell
 .\tiiny.cmd
+```
+
+No arguments opens a menu; check is the default, never install. To check directly:
+
+```powershell
 .\tiiny.cmd check
-.\tiiny.cmd install
-.\tiiny.cmd restore
 ```
 
-No arguments opens a menu. Omitted IP prompts for the device IPv4 address. Check is the menu default; install is never chosen automatically.
+The IP is prompted when omitted. The engine still asks for CHECK, BACKUP, INSTALL or RESTORE; no confirmation is bypassed. [Full usage guide](docs/USAGE.md) covers each operation, explicit arguments, key setup and PuTTY.
 
-Alternatively use python tiiny.py, or the venv interpreter explicitly. The launcher supports a positional IP or --ip, --state-dir and --key. For example:
+The default private state directory is %LOCALAPPDATA%\TiinyOwnerSSH\device-baseline. Keep the WHOLE directory and a secure second copy. Never overwrite, regenerate or hand-edit the original baseline after installation. Keep private keys/PPKs private.
 
-```powershell
-python .\tiiny.py check --dry-run
-```
+## What changes, and what is undo?
 
-Dry-run prompts as needed and displays the engine invocation; it does not launch the engine, contact the device, or create state files. It does not prove dependency/device readiness. Output may include local usernames, paths and target IPs: review before sharing.
+Install adds your public key and an SSH drop-in, validates configuration, reloads the existing listener and verifies a fresh root login. It does not enable root password authentication. Existing default authorized-key files remain searched, so previously authorized root keys may also become usable.
 
-The default Windows state directory remains %LOCALAPPDATA%\TiinyOwnerSSH\device-baseline, compatible with existing backups. No IP is silently saved or inferred. A command-line override is passed through explicitly.
+Restore returns the managed files' recorded bytes, existence, ownership and permissions to the baseline and checks fresh rejection of your owner key. It does not terminate already-open sessions. It is not a factory image, log erasure, full metadata restore, firmware recovery or warranty guarantee. Unexpected state is refused rather than overwritten.
 
-## Key and backup first
+Management uses HTTP without TLS and temporary containers; install/restore require host write access and PID visibility. Use a trusted network. Recovery attempts can fail. Keep the token/API, cached helper image, report volume and baseline available. Read the [security and recovery limits](docs/USAGE.md#security-and-recovery-limits) before installation.
 
-Keep an existing owner key pair. Do not regenerate it or overwrite a baseline. For a new setup only:
+## Tested versus untested
 
-```powershell
-New-Item -ItemType Directory -Path "$env:USERPROFILE\.ssh" -Force | Out-Null
-ssh-keygen -t ed25519 -C tiiny-owner -f "$env:USERPROFILE\.ssh\tiiny_owner_ed25519"
-```
+| Scope | Status |
+| --- | --- |
+| Underlying backup/check/install/real restore/fresh login and rejection/cleanup | Passed on one setup |
+| Windows shortcut with system Python, IP prompt, default state reuse, dry-run and live check | Passed 2026-10-20 |
+| Mocked/synthetic Linux tests | 32 passed: 16 launcher, 16 host-state |
+| Windows .venv branch, action menu, launcher-driven install/restore on hardware | Not yet validated |
+| Real interruption recovery, reboot persistence, firmware updates, other versions | Not established |
 
-Choose a passphrase. Then create the original-state backup:
+[Validation details](docs/VALIDATION.md). Device observations: Debian 12/aarch64, Linux 6.6.89, Windows app 1.0.1 and platform container name suffix 0.1.35. That suffix is not a verified firmware version.
 
-```powershell
-.\tiiny.cmd backup
-```
+## Hardware we found
 
-The engine asks for BACKUP. This creates temporary resources with a read-only host mount; it does not intentionally edit SSH files or reload SSH. Preserve the entire state directory and a private second copy. It includes baseline.json, known_hosts, ssh_config and receipts. It is outside the checkout and must never be committed.
+AiBox SIT Board V0.1.2 / CIX Sky1-family; 8 Cortex-A720 + 4 Cortex-A520; approximately 32 GB host RAM; Houmo/XH2A driver v1.4.1 over PCIe 4.0 x4; Samsung 1 TB-class NVMe; RAUC A/B, read-only root and configuration overlays.
 
-Backup refuses an existing baseline. Missing baselines block check/install/restore. Do not delete state to force a retry; diagnose failures. Open the default directory with:
+These are observations on our inspected setup, not universal specifications. Accelerator-local memory capacity is still unmeasured. [Hardware findings, software architecture and open questions](docs/HARDWARE.md).
 
-```powershell
-explorer.exe "$env:LOCALAPPDATA\TiinyOwnerSSH\device-baseline"
-```
+## Repository guide
 
-## Check, install, restore
+- Run tiiny.cmd / tiiny.py for normal use.
+- tiiny_backup_ready.py / tiiny_access.py are advanced engine entry points.
+- The other Python files are required helpers; keep them together. Do not delete tiiny_owner.py or run its old CLI: it is still imported, while its unsupported discovery path is bypassed by the wrappers. Removing it requires a separate tested refactor.
+- [Usage](docs/USAGE.md), [hardware](docs/HARDWARE.md), [validation](docs/VALIDATION.md), [documentation index](docs/README.md), and [current project state](PROJECT_STATE.md) are current guidance. Other checkpoint documents are historical.
 
-Run each operation separately. The engine still requires CHECK, INSTALL or RESTORE. Before first install, check should report baseline state true, installed state false, enabled native service, verified listener, and clean resource removal.
-
-Install adds the owner public key and drop-in, validates syntax/effective default policy/state, signals the verified native listener, and verifies a fresh root login. It does not enable/start/restart native SSH. Existing default authorized-key files remain searched; previously authorized root keys may also become usable while root key login is allowed.
-
-Install/restore require a temporary read/write host mount and host PID namespace. On install or final-login failure, restoration is attempted, not guaranteed. The launcher waits for the engine during terminal interrupts rather than forcibly killing it; closing the terminal or repeated interruption can still disrupt recovery.
-
-Restore uses management access and the saved public key; it does not require the private key. It restores the exact expected managed state and checks fresh key rejection. Conflicting external edits are refused. Existing SSH sessions are not terminated; close them yourself. After restore, check should report baseline state true, installed state false, and root login policy no.
-
-## Direct engine entry points
-
-These remain available for existing automation:
-
-```text
-python tiiny_backup_ready.py backup DEVICE_IP --state-dir DIRECTORY
-python tiiny_access.py check DEVICE_IP --state-dir DIRECTORY
-python tiiny_access.py install DEVICE_IP --state-dir DIRECTORY
-python tiiny_access.py restore DEVICE_IP --state-dir DIRECTORY
-```
-
-Do not run tiiny_owner.py as a CLI. Despite its legacy name it remains a required internal module. Its original deployment-discovery route failed on the tested setup and is bypassed by the verified wrappers. Removing it now breaks imports. Extracting shared code/removing obsolete paths is a separate future refactor, not part of this launcher update. Keep all engine files together.
-
-## SSH and PuTTY
-
-After successful installation, use root and port 3588 with the existing key. OpenSSH example:
-
-```powershell
-$DeviceIP = Read-Host 'Tiiny IPv4 address'
-$StateDir = Join-Path $env:LOCALAPPDATA 'TiinyOwnerSSH\device-baseline'
-ssh -F "$StateDir\ssh_config" -i "$env:USERPROFILE\.ssh\tiiny_owner_ed25519" -p 3588 -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o "UserKnownHostsFile=$StateDir\known_hosts" "root@$DeviceIP"
-```
-
-For PuTTY, import the same private key into PuTTYgen and save a protected PPK copy; do not generate a different pair. Compare PuTTY's Ed25519 host fingerprint with ssh-keygen -l -E sha256 -f on the saved known_hosts file. Never upload private keys or PPKs.
-
-## Limits and privacy
-
-Management HTTP carries the bearer token without TLS. Initial SSH host-key trust derives from that management channel. Restore depends on the baseline, paired token, API, cached image, report volume and valid listener/configuration. Do not prune/remove them and assume recovery remains available.
-
-This is selected configuration rollback, not a factory reset, log erasure, warranty approval or complete metadata backup. ACLs, xattrs, timestamps and overlay internals are not comprehensively preserved. Firmware matching is limited; changes may be refused. Restore before firmware updates where feasible and never hand-edit the baseline to bypass checks.
-
-Default sshd checks do not simulate every Match context. Actual login/rejection matters. Reboot persistence, firmware-update behavior and real interruption recovery remain unvalidated.
-
-Do not commit tokens, databases, baseline/runtime JSON, raw logs, private keys, serials, MACs or vendor-source excerpts. Ignore rules are not a guarantee. See docs/HARDWARE.md and PROJECT_STATE.md. Earlier checkpoint documents are historical, not current instructions.
-
-## Tests
-
-```text
-python -m unittest discover -s tests -v
-```
-
-Launcher tests use temporary placeholder files and mocked child processes. Host-state tests use POSIX temporary-file operations with mocked system/SSH checks and signaling; transaction ownership is mapped to the test user. The combined suite was run on Linux. Host-state tests are POSIX-only, but that does not make WSL a Windows runtime requirement. They are not end-to-end API, real reload, firmware or disaster-recovery tests. The Windows batch shortcut was reviewed but not executed in the build environment.
-
-No project license is assigned. Development began from an owner-supplied bootstrap whose original redistribution license has not been established. No vendor-source evidence is reproduced.
+Do not publish tokens, private keys, app databases, backups, runtime JSON, raw device output or vendor-source excerpts. No runtime code is changed by this documentation update. No project license is assigned; the original owner-supplied bootstrap's redistribution license remains unresolved.
